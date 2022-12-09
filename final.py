@@ -73,20 +73,14 @@ class RedactoDataset(torch.utils.data.Dataset):
 class RedactoNet(nn.Module):
     def __init__(self):
         super(RedactoNet, self).__init__()
-        #self.batch1 = nn.BatchNorm2d(4)
-        self.conv1 = nn.Conv2d(4, 16, 3, stride=1, padding=1)
-        self.batch2 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, 7, stride=1, padding=3)
-        self.batch3 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, 15, stride=1, padding=7)
-        self.batch4 = nn.BatchNorm2d(32)
-        self.conv4 = nn.Conv2d(32, 16, 7, stride=1, padding=3)
-        self.batch5 = nn.BatchNorm2d(16)
-        self.conv5 = nn.Conv2d(16, 3, 3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(4, 8, 3, stride=1, padding=1)
+        self.batch2 = nn.BatchNorm2d(8)
+        self.conv2 = nn.Conv2d(8, 16, 3, stride=1, padding=1)
+        self.batch3 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 3, 3, stride=1, padding=1)
         self.accuracy = None
 
     def forward(self, x):
-        #x = self.batch1(x)
         x = self.conv1(x)
         x = F.relu(x)
         x = self.batch2(x)
@@ -94,12 +88,6 @@ class RedactoNet(nn.Module):
         x = F.relu(x)
         x = self.batch3(x)
         x = self.conv3(x)
-        x = F.relu(x)
-        x = self.batch4(x)
-        x = self.conv4(x)
-        x = F.relu(x)
-        x = self.batch5(x)
-        x = self.conv5(x)
         return x
         
     def loss(self, pred, original_image, x_start, x_end, y_start, y_end):
@@ -110,8 +98,30 @@ class RedactoNet(nn.Module):
         #return F.mse_loss(pred[0:3, x_start:x_end, y_start:y_end], original_image[0:3, x_start:x_end, y_start:y_end])
 
 
+def construct_output(filename, pred, target, x_start, x_end, y_start, y_end):
+    pred_img = transforms.ToPILImage()(pred)
+    target_img = transforms.ToPILImage()(target)
+    mixed = target_img.copy()
+    mixed_pix = mixed.load()
+    pred_pix = pred_img.load()
+    for i in range(x_start, x_end):
+        for j in range(y_start, y_end):
+            mixed_pix[i, j] = pred_pix[i, j]
+
+    for i in range(pred_img.size[0]):
+        for j in range(pred_img.size[1]):
+            if i < x_start or i >= x_end or j < y_start or j>= y_end:
+                pred_pix[i, j] = (0, 0, 0)
+
+    concat = Image.new('RGB', (pred_img.width * 3, pred_img.height))
+    concat.paste(pred_img, (0, 0))
+    concat.paste(target_img, (pred_img.width, 0))
+    concat.paste(mixed, (pred_img.width * 2, 0))
+    concat.save(os.path.join('model_output', filename))
+
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print('Using device ', device)
+print('Using device', device)
 
 train_data, test_data = [RedactoDataset(os.path.join('dataset', x)) for x in ['train', 'test']]
 train_loader, test_loader = [torch.utils.data.DataLoader(x, batch_size = BATCH_SIZE, shuffle=True) for x in [test_data, train_data]]
@@ -123,12 +133,35 @@ epoch = 0
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 while epoch < 16:
     train_loss_total = 0
+
+    index = 0
+    os.mkdir('model_output')
+    random_samples = [(random.randint(0, len(train_loader) - 1), random.randint(0, BATCH_SIZE - 1)) for _ in range(4)]
     for (observation, target, x_start, x_end, y_start, y_end) in train_loader:
         model.zero_grad()
-        train_loss = model.loss(model.forward(observation), target, x_start, x_end, y_start, y_end)
+        pred = model.forward(observation)
+
+        train_loss = model.loss(pred, target, x_start, x_end, y_start, y_end)
+
+        for random_sample in random_samples:
+            if random_sample[0] == index:
+                batch_index = random_sample[1]
+                image_name = "{}_{}.png".format(epoch, index)
+                construct_output(
+                    image_name, 
+                    pred[batch_index], 
+                    target[batch_index], 
+                    x_start[batch_index], 
+                    x_end[batch_index], 
+                    y_start[batch_index], 
+                    y_end[batch_index]
+                )
+
         train_loss.backward()
         optimizer.step()
         train_loss_total += train_loss
+        index += 1
+
     losses.append((train_loss_total/len(train_loader)).item())
     print("epoch = " + str(epoch) + ", loss = " + str(train_loss_total))
     epoch += 1
