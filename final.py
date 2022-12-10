@@ -19,8 +19,6 @@ IMG_SAMPLES = 4
 # we remove a REDACT_SIZE * REDACT_SIZE square of pixels from the image
 REDACT_SIZE = 2
 
-BATCH_SIZE = 1
-
 # get cifar if we don't have it
 if not os.path.exists('cifar'):
     os.system('wget https://pjreddie.com/media/files/cifar.tar.gz')
@@ -134,7 +132,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device', device)
 
 train_data, test_data = [RedactoDataset(os.path.join('dataset', x)) for x in ['train', 'test']]
-train_loader, test_loader = [torch.utils.data.DataLoader(x, batch_size = 1, shuffle=True) for x in [train_data, test_data]]
+train_loader, test_loader = [torch.utils.data.DataLoader(x, shuffle=True) for x in [train_data, test_data]]
 
 model = RedactoNet()
 
