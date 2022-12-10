@@ -158,7 +158,6 @@ while epoch < 16:
 
         if index in random_samples:
             image_name = "{}_{}_{}".format(epoch, index, name[0])
-            print('', x[0], y[0])
             construct_output(image_name, pred[0], target[0], observation[0], x[0], y[0])
 
         train_loss.backward()
