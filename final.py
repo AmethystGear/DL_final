@@ -5,6 +5,10 @@ import torch.nn.functional as F
 import random
 from PIL import Image
 from torchvision import transforms
+import shutil
+from pathlib import Path
+import sys
+torch.set_printoptions(threshold=10_000, linewidth=200)
 
 # location where we keep the redacted images (train, test)
 DATASET_LOC = 'dataset'
@@ -13,9 +17,9 @@ DATASET_LOC = 'dataset'
 IMG_SAMPLES = 4
 
 # we remove a REDACT_SIZE * REDACT_SIZE square of pixels from the image
-REDACT_SIZE = 4
+REDACT_SIZE = 2
 
-BATCH_SIZE = 10
+BATCH_SIZE = 1
 
 # get cifar if we don't have it
 if not os.path.exists('cifar'):
@@ -63,60 +67,66 @@ class RedactoDataset(torch.utils.data.Dataset):
             for i in range(0, REDACT_SIZE):
                 for j in range(0, REDACT_SIZE):
                     if c < 3:
-                        redacto[c, x + i, y + j] = 0.0
+                        redacto[c, y + i, x + j] = 0.0
                     else:
-                        redacto[c, x + i, y + j] = 1.0
+                        redacto[c, y + i, x + j] = 1.0
 
-        return redacto, image, x, x + REDACT_SIZE, y, y + REDACT_SIZE
+        return Path(filename).name, redacto, image, x, y
         
 
 class RedactoNet(nn.Module):
     def __init__(self):
         super(RedactoNet, self).__init__()
-        self.conv1 = nn.Conv2d(4, 8, 3, stride=1, padding=1)
-        self.batch2 = nn.BatchNorm2d(8)
-        self.conv2 = nn.Conv2d(8, 16, 3, stride=1, padding=1)
-        self.batch3 = nn.BatchNorm2d(16)
-        self.conv3 = nn.Conv2d(16, 3, 3, stride=1, padding=1)
-        self.accuracy = None
+        self.conv1 = nn.Conv2d(4, 3, 3, stride=1, padding=1)
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.relu(x)
-        x = self.batch2(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = self.batch3(x)
-        x = self.conv3(x)
         return x
         
-    def loss(self, pred, original_image, x_start, x_end, y_start, y_end):
-        total_loss = 0.0
-        for i in range(len(x_start)):
-            total_loss += F.mse_loss(pred[i][0:3, x_start[i]:x_end[i], y_start[i]:y_end[i]], original_image[i][0:3, x_start[i]:x_end[i], y_start[i]:y_end[i]])
-        return total_loss
-        #return F.mse_loss(pred[0:3, x_start:x_end, y_start:y_end], original_image[0:3, x_start:x_end, y_start:y_end])
+    def loss(self, pred, target, x, y): 
+        def redact_part(im):
+            return im[0][0:3, x[0]: x[0] + REDACT_SIZE, y[0]:y[0] + REDACT_SIZE]
+
+        return F.mse_loss(redact_part(pred), redact_part(target))
+
+def concat_images_horizontally(images):
+    w = sum([image.height for image in images])
+    h = images[0].height
+    concat = Image.new('RGB', (w, h))
+
+    curr_w = 0
+    for i in range(len(images)):
+        concat.paste(images[i], (curr_w, 0))
+        curr_w += images[i].width
+
+    return concat
 
 
-def construct_output(filename, pred, target, x_start, x_end, y_start, y_end):
+def construct_output(filename, pred, target, observation, x, y):
+    observation_img = transforms.ToPILImage()(observation)
     pred_img = transforms.ToPILImage()(pred)
     target_img = transforms.ToPILImage()(target)
+    pred_all = pred_img.copy()
     mixed = target_img.copy()
     mixed_pix = mixed.load()
     pred_pix = pred_img.load()
-    for i in range(x_start, x_end):
-        for j in range(y_start, y_end):
+    for i in range(x, x + REDACT_SIZE):
+        for j in range(y, y + REDACT_SIZE):
             mixed_pix[i, j] = pred_pix[i, j]
 
     for i in range(pred_img.size[0]):
         for j in range(pred_img.size[1]):
-            if i < x_start or i >= x_end or j < y_start or j>= y_end:
+            if i < x or i >= x + REDACT_SIZE or j < y or j>= y + REDACT_SIZE:
                 pred_pix[i, j] = (0, 0, 0)
 
-    concat = Image.new('RGB', (pred_img.width * 3, pred_img.height))
-    concat.paste(pred_img, (0, 0))
-    concat.paste(target_img, (pred_img.width, 0))
-    concat.paste(mixed, (pred_img.width * 2, 0))
+    target_isolate = target_img.copy()
+    target_isolate_pix = target_isolate.load()
+    for i in range(pred_img.size[0]):
+        for j in range(pred_img.size[1]):
+            if i < x or i >= x + REDACT_SIZE or j < y or j>= y + REDACT_SIZE:
+                target_isolate_pix[i, j] = (0, 0, 0)
+
+    concat = concat_images_horizontally([observation_img, pred_img, target_isolate, pred_all, target_img, mixed])
     concat.save(os.path.join('model_output', filename))
 
 
@@ -124,43 +134,47 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('Using device', device)
 
 train_data, test_data = [RedactoDataset(os.path.join('dataset', x)) for x in ['train', 'test']]
-train_loader, test_loader = [torch.utils.data.DataLoader(x, batch_size = BATCH_SIZE, shuffle=True) for x in [test_data, train_data]]
+train_loader, test_loader = [torch.utils.data.DataLoader(x, batch_size = 1, shuffle=True) for x in [train_data, test_data]]
 
 model = RedactoNet()
 
+shutil.rmtree('model_output')
+os.mkdir('model_output')
+
 losses = []
 epoch = 0
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 while epoch < 16:
     train_loss_total = 0
 
     index = 0
-    os.mkdir('model_output')
-    random_samples = [(random.randint(0, len(train_loader) - 1), random.randint(0, BATCH_SIZE - 1)) for _ in range(4)]
-    for (observation, target, x_start, x_end, y_start, y_end) in train_loader:
+    percent = 0
+    random_samples = [random.randint(0, len(train_loader) - 1) for _ in range(4)]
+    for (name, observation, target, x, y) in train_loader:
         model.zero_grad()
         pred = model.forward(observation)
 
-        train_loss = model.loss(pred, target, x_start, x_end, y_start, y_end)
+        train_loss = model.loss(pred, target, x, y)
 
-        for random_sample in random_samples:
-            if random_sample[0] == index:
-                batch_index = random_sample[1]
-                image_name = "{}_{}.png".format(epoch, index)
-                construct_output(
-                    image_name, 
-                    pred[batch_index], 
-                    target[batch_index], 
-                    x_start[batch_index], 
-                    x_end[batch_index], 
-                    y_start[batch_index], 
-                    y_end[batch_index]
-                )
+        if index in random_samples:
+            image_name = "{}_{}_{}".format(epoch, index, name[0])
+            print('', x[0], y[0])
+            construct_output(image_name, pred[0], target[0], observation[0], x[0], y[0])
 
         train_loss.backward()
         optimizer.step()
         train_loss_total += train_loss
         index += 1
+        if int(index / len(train_loader) * 100) > percent:
+            percent += 1
+            print('#', end='')
+            sys.stdout.flush()
+
+
+
+
+    print('')
+
 
     losses.append((train_loss_total/len(train_loader)).item())
     print("epoch = " + str(epoch) + ", loss = " + str(train_loss_total))
