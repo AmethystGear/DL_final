@@ -75,10 +75,15 @@ class RedactoDataset(torch.utils.data.Dataset):
 class RedactoNet(nn.Module):
     def __init__(self):
         super(RedactoNet, self).__init__()
-        self.conv1 = nn.Conv2d(4, 3, 3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(4, 15, 3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(16, 3, 3, stride=1, padding=1)
 
     def forward(self, x):
+        redacto = x[:, 3].unsqueeze(1)
         x = self.conv1(x)
+        x = torch.cat((x, redacto), 1)
+        x = F.relu(x)
+        x = self.conv2(x)
         return x
         
     def loss(self, pred, target, x, y): 
