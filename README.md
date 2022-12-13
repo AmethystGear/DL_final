@@ -85,3 +85,4 @@ Sometimes it appears to generate color in cases where it should just generate bl
 Training this neural network on higher resolution images would be an interesting challenge and logical next step. We did not attempt this because training was already slow on the 32 x 32 CIFAR images, and so training on much larger images would require more compute power or more clever tricks to speed up training. Another logical next step would be to allow you to redact portions of an image on a pixel-by-pixel basis and then have the neural net predict all those pixels. Since we already make use of the redact channel, our model already has the infastructure to handle this.
 
 # Video
+https://github.com/AmethystGear/DL_final/blob/main/redacto.mp4
