@@ -7,12 +7,45 @@ We created a deep neural network to reconstruct images from the CIFAR dataset wh
 
 
 # Problemo
-We are trying to do image reconstruction. We want to take images, remove a portion of the image, and have our deep neural network reconstruct that portion of the image as close to the original as possible.
+We are trying to do image reconstruction. We want to take images, remove a portion of the image, and have our deep neural network reconstruct that portion of the image as close to the original as possible. It is, of course, impossible to actually replicate the image 1 to 1 (we are removing information from the image - you can't create information!). But with this project, we are trying to see how good we can make the generations, and if we can make them convincing to a human observer. 
 
 # Inspirationo/Relato Worko
-We were mostly inspired from the work we did with CIFAR and Imagenet in class, and wanted to expand on that. One other inspiration was from machine learning in a previous quarter, where we were assigned MINST classification. We figured out that you could construct digits by multiplying by the *inverse* of the classification matrix. So we wanted to do something in that vein - except this time reconstruct images.
+We were mostly inspired from the work we did with CIFAR and Imagenet in class, and wanted to expand on that. One other inspiration was from machine learning in a previous quarter, where we were assigned MINST classification. We figured out that you could construct digits by multiplying by the *inverse* of the classification matrix. So we wanted to do something in that vein - except this time reconstruct images instead of digits. 
 
-We used a modified CIFAR dataset with the centers of each image removed. 
+We used a modified CIFAR dataset, with the middle of the image 'redacted'. What this means is we construct a new image where the center 4x4 pixels are converted to the color grey instead of being whatever color they were in the original image, and a 4th channel (the redact channel) is added to the image, which contains information about which pixels have been 'redacted' (greyed out). This 4th channel is 1.0 for every pixel that was redacted, and 0.0 for every pixel that was not. In essence, if the original looks like this:
+![](original.png)
+The redacted image looks like this:
+![](redacted.png)
+
+You can imagine in tensors what this looks like - consider the following to be the red channel of an image:
+```
+tensor([[0.5, 0.1, 0.2, 0.3]
+        [0.6, 0.2, 0.4, 0.9]
+        [0.1, 0.1, 0.5, 0.5]
+        [0.1, 0.2, 0.3, 0.4]])
+```
+
+this is what it looks like post redaction:
+```
+tensor([[0.5, 0.1, 0.2, 0.3]
+        [0.6, 0.0, 0.0, 0.9]
+        [0.1, 0.0, 0.0, 0.5]
+        [0.1, 0.2, 0.3, 0.4]])
+```
+
+and this is what the new 'redact' channel looks like.
+
+```
+tensor([[0.0, 0.0, 0.0, 0.0]
+        [0.0, 1.0, 1.0, 0.0]
+        [0.0, 1.0, 1.0, 0.0]
+        [0.0, 0.0, 0.0, 0.0]])
+```
+
+in the above example i'm showing a 2x2 pixel redaction, in our system, we use a 4x4 pixel redaction.
+
+# Evaluationo
+We do MSE loss over the redacted region of the predicted image and the target image. We also visually evaluate the results - we're trying to produce realistic images such that people can't tell the difference between which one is real and which one is fake.AR dataset with the centers of each image removed. 
 
 # Methodos
 The model we created was a 3 layer convolutional neural network with ReLU in between the layers. However, we also insert the redact channel (4th/alpha channel) from the initial image into every layer except the last one. This improves network performance significantly (reduces loss by about 25%). Visually, it looks way more than ~25% better.
@@ -23,8 +56,10 @@ All of our code for this model is in `final.py`.
 
 # Experimentos
 
-We do MSE loss over the redacted region of the predicted image and the target image. We also visually evaluate the results - we're trying to produce realistic images such that people can't tell the difference between which one is real and which one is fake.
 
+
+# Evaluationo
+We do MSE loss over the redacted region of the predicted image and the target image. We also visually evaluate the results - we're trying to produce realistic images such that people can't tell the difference between which one is real and which one is fake.
 
 # Resultos
 In the end, our test loss was 0.0100, and our train loss was 0.010911520 (this means that we were not overfitting). Visually, we can produce quite convincing reconstructions:
