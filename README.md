@@ -15,7 +15,7 @@ We were mostly inspired from the work we did with CIFAR and Imagenet in class, a
 We used a modified CIFAR dataset with the centers of each image removed. 
 
 # Methodos
-The model we created was a 3 layer convolutional neural network with ReLU in between the layers. However, we also insert the redact channel (4th/alpha channel) from the initial image into every layer except the last one. This improves network performance significantly (reduces loss by about 25%). Visually, it looks more than ~25% better.
+The model we created was a 3 layer convolutional neural network with ReLU in between the layers. However, we also insert the redact channel (4th/alpha channel) from the initial image into every layer except the last one. This improves network performance significantly (reduces loss by about 25%). Visually, it looks way more than ~25% better.
 
 
 # Experimentos
