@@ -79,7 +79,7 @@ They are good to the point where sometimes it's hard to tell which is the genera
 ![](im/68108_7869_airplane.png)
 ![](im/98278_9257_dog.png)
 
-Sometimes it appears to generate color in cases where it should just generate black and white. It also seems biased towards creating purples and greens where it shouldn't. I believe this is because cifar is dominated by greens/purples because of all the animals and natural backgrounds in the dataset. We could fix this by adding more black and white images to the dataset or just using a more diverse dataset than CIFAR.
+Sometimes it appears to generate color in cases where it should just generate black and white. It also seems biased towards creating purples and greens where it shouldn't. We believe this is because cifar is dominated by greens/purples because of all the animals and natural backgrounds in the dataset. We could fix this by adding more black and white images to the dataset or just using a more diverse dataset than CIFAR.
 
 # Futuro
 Training this neural network on higher resolution images would be an interesting challenge and logical next step. We did not attempt this because training was already slow on the 32 x 32 CIFAR images, and so training on much larger images would require more compute power or more clever tricks to speed up training. Another logical next step would be to allow you to redact portions of an image on a pixel-by-pixel basis and then have the neural net predict all those pixels. Since we already make use of the redact channel, our model already has the infastructure to handle this.
