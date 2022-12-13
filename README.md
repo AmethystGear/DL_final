@@ -50,6 +50,8 @@ in the above example i'm showing a 2x2 pixel redaction, in our system, we use a 
 # Methodos
 The model we created was a 3 layer convolutional neural network with ReLU in between the layers. However, we also insert the redact channel (4th/alpha channel) from the initial image into every layer except the last one. This improves network performance significantly (reduces loss by about 25%). Visually, it looks way more than ~25% better.
 
+Here's the visualization of our model architecture (where the red lines between layers represent convolution plus ReLU layers):
+
 ![](redact_visualization_2.png)
 
 All of our code for this model is in `final.py`.
