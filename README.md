@@ -74,7 +74,7 @@ In the end, our test loss was 0.0100, and our train loss was 0.010911520 (this m
 
 The images are, in order from left to right, the input we give to the model (redacted image - the red region is the redacted part), the prediction (cropped down to the relevant portion - the region that was redacted in the original image), the original (cropped down to the relavant portion), the original (full image), and the reconstruction (prediction cropped down to the relevant portion pasted over observation). Note that the red is added for the viewer, the actual model trains on images that have been redacted with a gray color. 
 
-They are good to the point where sometimes it's hard to tell which is the generated image and which is the original. We have some less convincing generations, particularly on images where the subject is black and white:
+They are good to the point where sometimes it's hard to tell which is the generated image and which is the original. But we have some less convincing generations, particularly on images where the subject is black and white:
 
 ![](im/68108_7869_airplane.png)
 ![](im/98278_9257_dog.png)
