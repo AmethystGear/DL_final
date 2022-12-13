@@ -1,6 +1,8 @@
 # *Redacto*
 A neural network designed to un-redact images.
 
+By Shiven Bhatt and Ethan Fisher
+
 # Abstracto
 
 We created a deep neural network to reconstruct images from the CIFAR dataset where a portion has been redacted. We used a convolutional model with 3 layers, ReLU, and a special redacted channel inserted at each layer so the network can always easily tell which pixels in the image are not redacted and what portion of the image it needs to focus on recreating. We calculated loss only over the redaction portion of the predicted image and actual target. We were able to produce some convincing constructions.
