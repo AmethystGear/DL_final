@@ -26,11 +26,15 @@ We do MSE loss over the redacted region of the prediction image and the target i
 # Resultos
 In the end, our test loss was 0.0100, and our train loss was 0.010911520. Visually, we can produce quite convincing reconstructions:
 
+![](im/10498_2976_airplane.png)
+![](im/4474_7446_dog.png)
+![](im/48_0_19040_frog.png)
 
 
 to the point where sometimes it's hard to tell which is the generated image and which is the original. We have some less convincing generations, particularly on images where the subject is black and white:
 
-
+![](im/68108_7869_airplane.png)
+![](im/98278_9257_dog.png)
 
 sometimes it appears to generate color in cases where it should just generate black and white. It also seems biased towards creating purples and greens where it shouldn't. I believe this is because cifar is dominated by greens/purples because of all the animals and natural backgrounds in the dataset. We could fix this by adding more black and white images to the dataset. 
 
