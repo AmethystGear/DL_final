@@ -47,9 +47,6 @@ tensor([[0.0, 0.0, 0.0, 0.0]
 
 in the above example i'm showing a 2x2 pixel redaction, in our system, we use a 4x4 pixel redaction.
 
-# Evaluationo
-We do MSE loss over the redacted region of the predicted image and the target image. We also visually evaluate the results - we're trying to produce realistic images such that people can't tell the difference between which one is real and which one is fake.AR dataset with the centers of each image removed. 
-
 # Methodos
 The model we created was a 3 layer convolutional neural network with ReLU in between the layers. However, we also insert the redact channel (4th/alpha channel) from the initial image into every layer except the last one. This improves network performance significantly (reduces loss by about 25%). Visually, it looks way more than ~25% better.
 
