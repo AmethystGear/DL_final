@@ -55,7 +55,7 @@ The model we created was a 3 layer convolutional neural network with ReLU in bet
 All of our code for this model is in `final.py`.
 
 # Experimentos
-We tried using batch normalization, regularization, downsampling, the Adam optimizer, more layers and channels, and training on the whole data, but these surprisingly weren't needed and just slowed down our training significantly.
+We tried using batch normalization, regularization, downsampling, the Adam optimizer, more layers and channels, and training on the whole data per epoch, but these surprisingly weren't needed and just slowed down our training significantly. What worked was training over the whole data over all the epochs, and inserting the redact channel at each layer. Those two combined provided good results, both visually, and empirically (lower loss). 
 
 # Evaluationo
 We do MSE loss over the redacted region of the predicted image and the target image. We also visually evaluate the results - we're trying to produce realistic images such that people can't tell the difference between which one is real and which one is fake.
