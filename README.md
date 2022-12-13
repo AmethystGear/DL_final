@@ -1,4 +1,4 @@
-# *Recacto*
+# *Redacto*
 
 # Abstracto
 
