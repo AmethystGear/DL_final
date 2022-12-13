@@ -13,8 +13,11 @@ We are trying to do image reconstruction. We want to take images, remove a porti
 We were mostly inspired from the work we did with CIFAR and Imagenet in class, and wanted to expand on that. One other inspiration was from machine learning in a previous quarter, where we were assigned MINST classification. We figured out that you could construct digits by multiplying by the *inverse* of the classification matrix. So we wanted to do something in that vein - except this time reconstruct images instead of digits. 
 
 We used a modified CIFAR dataset, with the middle of the image 'redacted'. What this means is we construct a new image where the center 4x4 pixels are converted to the color grey instead of being whatever color they were in the original image, and a 4th channel (the redact channel) is added to the image, which contains information about which pixels have been 'redacted' (greyed out). This 4th channel is 1.0 for every pixel that was redacted, and 0.0 for every pixel that was not. In essence, if the original looks like this:
+
 ![](original.png)
+
 The redacted image looks like this:
+
 ![](redacted.png)
 
 You can imagine in tensors what this looks like - consider the following to be the red channel of an image:
