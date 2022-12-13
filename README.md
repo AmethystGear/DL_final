@@ -27,7 +27,7 @@ We do MSE loss over the redacted region of the predicted image and the target im
 
 
 # Resultos
-In the end, our test loss was 0.0100, and our train loss was 0.010911520. Visually, we can produce quite convincing reconstructions:
+In the end, our test loss was 0.0100, and our train loss was 0.010911520 (this means that we were not overfitting). Visually, we can produce quite convincing reconstructions:
 
 ![](im/10498_2976_airplane.png)
 ![](im/4474_7446_dog.png)
