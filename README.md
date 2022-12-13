@@ -20,7 +20,7 @@ The model we created was a 3 layer convolutional neural network with ReLU in bet
 
 # Experimentos
 
-We do MSE loss over the redacted region of the prediction image and the target image. We also visually evaluate the results - we're trying to produce images such that people can't tell the difference.
+We do MSE loss over the redacted region of the predicted image and the target image. We also visually evaluate the results - we're trying to produce realistic images such that people can't tell the difference between which one is real and which one is fake.
 
 
 # Resultos
