@@ -34,4 +34,7 @@ to the point where sometimes it's hard to tell which is the generated image and 
 
 sometimes it appears to generate color in cases where it should just generate black and white. It also seems biased towards creating purples and greens where it shouldn't. I believe this is because cifar is dominated by greens/purples because of all the animals and natural backgrounds in the dataset. We could fix this by adding more black and white images to the dataset. 
 
+# Futuro
+INSERT FUTURE WORK
+
 # Video
